@@ -2,52 +2,61 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Painel de Dados Atualizado</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Painel de Dados</title>
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <style>
-        body { font-family: sans-serif; padding: 20px; }
-        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; background-color: #f4f7f6; }
+        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        #status { margin-bottom: 20px; color: #7f8c8d; font-style: italic; }
+        table { border-collapse: collapse; width: 100%; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #dfe6e9; padding: 12px; text-align: left; }
+        th { background-color: #3498db; color: white; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
     </style>
 </head>
 <body>
-    <h1>Informações do Excel</h1>
-    <div id="status">Carregando dados...</div>
-    <div id="tabela-container"></div>
+
+    <h1>📊 Painel de Informações</h1>
+    <div id="status">Verificando atualizações...</div>
+    <div id="tabela-container">Carregando dados da planilha...</div>
 
     <script>
-        async function carregarExcel() {
-            // SUBSTITUA pelo seu link RAW do GitHub
-            const url = https://github.com/fabianonoabifa-prog/meu-painel-xml/raw/refs/heads/main/Lead%20Time.xlsx;
+        async function carregarDadosDoExcel() {
+            // SUBSTITUA O LINK ABAIXO PELO SEU LINK RAW QUE VOCÊ CONSEGUIU COPIAR
+            const urlBase = https://github.com/fabianonoabifa-prog/meu-painel-xml/raw/refs/heads/main/Lead%20Time.xlsx;
             
+            // Adicionamos um número aleatório no final para forçar o navegador a pegar o arquivo novo
+            const urlFinal = urlBase + '?t=' + new Date().getTime();
+
             try {
-                const response = await fetch(url);
-                const data = await response.arrayBuffer();
+                const response = await fetch(urlFinal);
+                if (!response.ok) throw new Error("Não foi possível acessar o arquivo.");
                 
-                // Lendo o arquivo Excel
+                const data = await response.arrayBuffer();
                 const workbook = XLSX.read(data, { type: 'array' });
                 
-                // Pegando a primeira aba (planilha)
-                const primeiraAba = workbook.SheetNames[0];
-                const planilha = workbook.Sheets[primeiraAba];
+                // Pega a primeira aba
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
                 
-                // Convertendo para HTML
-                const htmlTable = XLSX.utils.sheet_to_html(planilha);
-                
+                // Converte para HTML e exibe
+                const htmlTable = XLSX.utils.sheet_to_html(worksheet);
                 document.getElementById('tabela-container').innerHTML = htmlTable;
-                document.getElementById('status').innerText = "Última atualização: " + new Date().toLocaleTimeString();
+                
+                const agora = new Date().toLocaleTimeString('pt-BR');
+                document.getElementById('status').innerText = "Última leitura realizada às: " + agora;
             } catch (error) {
-                document.getElementById('status').innerText = "Erro ao carregar dados.";
+                document.getElementById('status').innerText = "Erro ao carregar: " + error.message;
                 console.error(error);
             }
         }
 
-        // Carrega ao abrir a página
-        carregarExcel();
-        
-        // Recarrega automaticamente a cada 1 hora (3600000 ms)
-        setInterval(carregarExcel, 3600000);
+        // Executa assim que a página abre
+        carregarDadosDoExcel();
+
+        // Configura para atualizar a tela a cada 1 hora (3600000 milissegundos)
+        setInterval(carregarDadosDoExcel, 3600000);
     </script>
 </body>
 </html>
